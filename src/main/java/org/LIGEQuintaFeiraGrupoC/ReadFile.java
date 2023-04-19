@@ -3,6 +3,9 @@ package org.LIGEQuintaFeiraGrupoC;
 import java.io.File;
 import java.io.*;
 import java.io.IOException;
+import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -16,24 +19,45 @@ import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import java.util.Map;
 
 public class ReadFile {
-    public File getFile(String file) {
-        // If file is local, readLocalFile(file), if is online, readOnlineFile().
+    /**
+     * Gets a file from disk or web
+     * @param file Local path or file URL
+     * @return File corresponding to the path or URL
+     */
+    public static File getFile(String file) {
+        if(file.startsWith("http://") || file.startsWith("https://"))
+            return readOnlineFile(file);
+        return readLocalFile(file);
+    }
+
+    private static File readLocalFile(String file) {
+        File f = new File(file);
+        if(f.exists())
+            return f;
         return null;
     }
 
-    private File readLocalFile(String file) {
-        return null;
+    private static File readOnlineFile(String file) {
+        String[] fields = file.split("/");
+        String filename = fields[fields.length-1];
+        try {
+            URL website = new URL(file);
+            ReadableByteChannel rbc = Channels.newChannel(website.openStream());
+            FileOutputStream fos = new FileOutputStream(filename);
+            fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+            rbc.close();
+            fos.close();
+            return new File(filename);
+        }catch(IOException e) {
+            return null;
+        }
     }
 
-    private File readOnlineFile(String file) {
-        return null;
-    }
-
-    public boolean isValidFile(File file) {
+    public static boolean isValidFile(File file) {
         return true;
     }
 
-    public List getData(File file) {
+    public static List getData(File file) {
         //if file is csv, getDataCSV. if json, getDataJson)
         return null;
     }
