@@ -1,14 +1,11 @@
 package org.LIGEQuintaFeiraGrupoC;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.io.BufferedReader;
-import java.io.FileReader;
 
 import java.util.*;
 
@@ -26,7 +23,7 @@ import java.util.Map;
 public class ReadFile {
     private static final String JSON_SUFX = ".json";
     private static final String CSV_SUFX = ".csv";
-    private static final String CSV_DEL = ",";
+    private static final String CSV_DEL = ";";
     
     /**
      * Gets a file from disk or web
@@ -73,9 +70,9 @@ public class ReadFile {
         //if file is csv, getDataCSV. if json, getDataJson)
         List l = Collections.emptyList();
 
-        if(file.getName().endsWith(".csv"))
+        if(file.getName().endsWith(CSV_SUFX))
             l.addAll(getDataCSV(file));
-        else if(file.getName().endsWith(".json"))
+        else if(file.getName().endsWith(JSON_SUFX))
             l.addAll(getDataJSON(file));
 
         return l;
@@ -87,21 +84,15 @@ public class ReadFile {
      * @return returns a type List<Map> where every Map is a row and contains the values of every column
      * @throws IOException in case the csv is not properly formatted.
      */
-    private List getDataCSV(File file) throws IOException {
-        List<Map<String, String>> list = new ArrayList<>();
-        String filePath = file.getPath();
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            String[] headers = br.readLine().split(CSV_DEL);
-            while ((line = br.readLine()) != null) {
-                String[] values = line.split(CSV_DEL);
-                Map<String, String> record = new HashMap<>();
-                for (int i = 0; i < headers.length; i++) {
-                    record.put(headers[i], values[i]);
-                }
-                list.add(record);
-            }
-        }
+    private static List getDataCSV(File file) throws IOException {
+        //CSV structure
+        CsvSchema schema = CsvSchema.builder().setColumnSeparator(';').setUseHeader(true).build();
+        CsvMapper mapper = new CsvMapper();
+        mapper.enable(CsvParser.Feature.IGNORE_TRAILING_UNMAPPABLE);
+
+        List<Map<?,?>> list;
+        MappingIterator<Map<?,?>> mappingIterator = mapper.reader().forType(Map.class).with(schema).readValues(file);
+        list = mappingIterator.readAll();
 
         return list;
     }
@@ -119,7 +110,7 @@ public class ReadFile {
 
         ObjectMapper objectMapper = new ObjectMapper();
         TypeReference<List<Map<String,Object>>> typeRef = new TypeReference<>() {};
-        List<Map<String, Object>> list = objectMapper.readValue(jsonString, typeRef);
+        List<Map<String,Object>> list = objectMapper.readValue(jsonString, typeRef);
 
         return list;
     }
@@ -130,22 +121,14 @@ public class ReadFile {
      * @return JSON file created from CSV file. Null if f isn't CSV or has errors.
      */
     public static File convertToJSON(File f) {
-        if (!f.getName().endsWith(".csv"))
+        if (!f.getName().endsWith(CSV_SUFX))
             return null;
-        //CSV structure
-        CsvSchema schema = CsvSchema.builder().setColumnSeparator(';').setUseHeader(true).build();
-        CsvMapper mapper = new CsvMapper();
-        mapper.enable(CsvParser.Feature.IGNORE_TRAILING_UNMAPPABLE);
         try {
-            // Convert CSV to List of Maps
-            List<Map<?,?>> list;
-            MappingIterator<Map<?,?>> mappingIterator = mapper.reader().forType(Map.class).with(schema).readValues(f);
-            list = mappingIterator.readAll();
-
             // Write list to new jsonFile
-            File jsonFile = new File(f.getName().replace(".csv",".json"));
+            File jsonFile = new File(f.getName().replace(CSV_SUFX,JSON_SUFX));
             jsonFile.createNewFile();
-            new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT,true).writeValue(jsonFile,list);
+
+            new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT,true).writeValue(jsonFile,getDataCSV(f));
             return jsonFile;
         } catch(IOException e) {
             e.printStackTrace();
@@ -159,7 +142,8 @@ public class ReadFile {
      * @return CSV file created from JSON.
      */
     public static File convertToCSV(File f) {
-        if(!f.getName().endsWith(".json"))  return null;
+        if(!f.getName().endsWith(JSON_SUFX))  return null;
+
         try {
             // Getting values from file and creating csv structure
             JsonNode jsonTree = new ObjectMapper().readTree(f);
