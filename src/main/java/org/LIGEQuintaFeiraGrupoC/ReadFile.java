@@ -1,11 +1,14 @@
 package org.LIGEQuintaFeiraGrupoC;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.io.BufferedReader;
+import java.io.FileReader;
 
 import java.util.*;
 
@@ -84,7 +87,7 @@ public class ReadFile {
      * @return returns a type List<Map> where every Map is a row and contains the values of every column
      * @throws IOException in case the csv is not properly formatted.
      */
-    public static List getDataCSV(File file) throws IOException {
+    private List getDataCSV(File file) throws IOException {
         List<Map<String, String>> list = new ArrayList<>();
         String filePath = file.getPath();
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
@@ -109,8 +112,9 @@ public class ReadFile {
      * @return returns a type List<Map> where every Map contains the attributes of the json element
      * @throws IOException
      */
-    public static List getDataJSON(File file) throws IOException {
-        Path path = Path.of(file.getAbsolutePath());
+    private static List getDataJSON(File file) throws IOException {
+
+        Path path = Path.of(file.getPath());
         String jsonString = Files.readString(path);
 
         ObjectMapper objectMapper = new ObjectMapper();
