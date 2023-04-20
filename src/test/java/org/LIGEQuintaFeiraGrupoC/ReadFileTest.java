@@ -56,33 +56,35 @@ class ReadFileTest {
 
     @Test
     void testConvertFromCSVToList() {
-        File csvFile = ReadFile.convertToJSON(ReadFile.getFile(System.getProperty("user.dir")+File.separator+"testFiles"+File.separator+"horario_exemplo.csv"));
-        List csvList = null;
+        ReadFile read = new ReadFile();
+        File csvFile = ReadFile.getFile(System.getProperty("user.dir")+File.separator+"testFiles"+File.separator+"horario_exemplo.csv");
+        List csvList = new ArrayList();
 
         try {
-            csvList = ReadFile.getDataCSV(csvFile);
+            csvList.add(read.getData(csvFile));
 
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
+        csvList.forEach(b -> System.out.println(b.toString()));
         assertTrue(!csvList.isEmpty());
-        csvFile.delete();
     }
 
     @Test
     void testConvertFromJSONToList() {
-        File jsonFile = ReadFile.getFile(System.getProperty("user.dir")+File.separator+"testFiles"+File.separator+"exemplo.json");
+        ReadFile read = new ReadFile();
+        File jsonFile = ReadFile.getFile(System.getProperty("user.dir")+File.separator+"testFiles"+File.separator+"horario_exemplo.json");
         List jsonList = new ArrayList();
 
         try {
-            jsonList.add(ReadFile.getDataJSON(jsonFile));
+            jsonList.add(read.getData(jsonFile));
 
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
+        jsonList.forEach(b -> System.out.println(b.toString()));
         assertTrue(!jsonList.isEmpty());
-        jsonFile.delete();
     }
 }
