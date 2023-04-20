@@ -30,4 +30,16 @@ class ReadFileTest {
     void testGetData() {
     }*/
 
+    @Test
+    void testConvertoToJSON() {
+        File csvFile = ReadFile.getFile(System.getProperty("user.dir")+File.separator+"testFiles"+File.separator+"horario_exemplo.csv");
+        File jsonFile = ReadFile.convertToJSON(csvFile);
+        assertTrue(jsonFile.exists());
+
+        File invalidFile = ReadFile.getFile("https://www.cambridgeenglish.org/images/210434-converting-practice-test-scores-to-cambridge-english-scale-scores.pdf");
+        File invalidJson = ReadFile.convertToJSON(invalidFile);
+        assertNull(invalidJson);
+        jsonFile.delete();
+        invalidFile.delete();
+    }
 }

@@ -15,6 +15,8 @@ import java.util.List;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvParser;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 
 import java.util.Map;
 
@@ -68,7 +70,7 @@ public class ReadFile {
      * @return returns a type List<Map> where every Map is a row and contains the values of every column
      * @throws IOException
      */
-    private List getDataCSV(File file) throws IOException {
+    private static List getDataCSV(File file) throws IOException {
 
         MappingIterator<Map> personIter = new CsvMapper().readerWithTypedSchemaFor(Map.class).readValues(file);
         List<Map> list = personIter.readAll();
@@ -81,7 +83,7 @@ public class ReadFile {
      * @return returns a type List<Map> where every Map contains the attributes of the json element
      * @throws IOException
      */
-    private List getDataJSON(File file) throws IOException {
+    private static List getDataJSON(File file) throws IOException {
 
         Path path = Path.of(file.getPath());
         String jsonList = Files.readString(path);
@@ -92,4 +94,35 @@ public class ReadFile {
         return list;
     }
 
+    /**
+     * Function that receives a CSV file and converts it to JSON. If the file isn't a CSV or if it isn't correctly structured, it will return null.
+     * @param f CSV file we want to convert
+     * @return JSON file created from CSV file. Null if f isn't CSV or has errors.
+     */
+    public static File convertToJSON(File f) {
+        if (!f.getName().endsWith(".csv"))
+            return null;
+        //CSV structure
+        CsvSchema schema = CsvSchema.builder().setColumnSeparator(';').setUseHeader(true).build();
+        CsvMapper mapper = new CsvMapper();
+        mapper.enable(CsvParser.Feature.IGNORE_TRAILING_UNMAPPABLE);
+        try {
+            // Convert CSV to List of Maps
+            List<Map<?,?>> list;
+            MappingIterator<Map<?,?>> mappingIterator = mapper.reader().forType(Map.class).with(schema).readValues(f);
+            list = mappingIterator.readAll();
+
+            // Write list to new jsonFile
+            File jsonFile = new File(f.getName().replace(".csv",".json"));
+            jsonFile.createNewFile();
+            FileWriter writer = new FileWriter(jsonFile);
+            writer.write(list.toString());
+            writer.close();
+            return jsonFile;
+        } catch(IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    
 }
