@@ -12,8 +12,10 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvParser;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
@@ -115,14 +117,39 @@ public class ReadFile {
             // Write list to new jsonFile
             File jsonFile = new File(f.getName().replace(".csv",".json"));
             jsonFile.createNewFile();
-            FileWriter writer = new FileWriter(jsonFile);
-            writer.write(list.toString());
-            writer.close();
+            new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT,true).writeValue(jsonFile,list);
             return jsonFile;
         } catch(IOException e) {
             e.printStackTrace();
             return null;
         }
     }
-    
+
+    /**
+     * Function that receives a JSON file and converts it to CSV. If the file isn't JSON, it will return null
+     * @param f JSON file we want to convert
+     * @return CSV file created from JSON.
+     */
+    public static File convertToCSV(File f) {
+        if(!f.getName().endsWith(".json"))  return null;
+        try {
+            // Getting values from file and creating csv structure
+            JsonNode jsonTree = new ObjectMapper().readTree(f);
+            CsvSchema.Builder csvSchemaBuilder = CsvSchema.builder().setColumnSeparator(';').setUseHeader(true);
+            // Get header for csv
+            JsonNode firstObject = jsonTree.elements().next();
+            firstObject.fieldNames().forEachRemaining(fieldName -> {csvSchemaBuilder.addColumn(fieldName);});
+
+            CsvSchema csvSchema = csvSchemaBuilder.build();
+
+            File newFile = new File(f.getName().replace(".json",".csv"));
+            newFile.createNewFile();
+
+            //Convert jsonTree to csv file
+            new CsvMapper().writerFor(JsonNode.class).with(csvSchema).writeValue(newFile,jsonTree);
+            return newFile;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

@@ -42,4 +42,14 @@ class ReadFileTest {
         jsonFile.delete();
         invalidFile.delete();
     }
+
+    @Test
+    void testConvertToCSV() {
+        File jsonFile = ReadFile.convertToJSON(ReadFile.getFile(System.getProperty("user.dir")+File.separator+"testFiles"+File.separator+"horario_exemplo.csv"));
+        File csvFile = ReadFile.convertToCSV(jsonFile);
+
+        assertTrue(csvFile.exists());
+        csvFile.delete();
+        jsonFile.delete();
+    }
 }
