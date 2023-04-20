@@ -4,17 +4,19 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.io.BufferedReader;
+import java.io.FileReader;
 
 import java.util.*;
 
-import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 public class ReadFile {
 
     private static final String JSON_SUFX = ".json";
     private static final String CSV_SUFX = ".csv";
+    private static final String CSV_DEL = ",";
 
     public File getFile(String file) {
         // If file is local, readLocalFile(file), if is online, readOnlineFile().
@@ -67,8 +69,20 @@ public class ReadFile {
      * @throws IOException in case the csv is not properly formatted.
      */
     private List getDataCSV(File file) throws IOException {
-        MappingIterator<Map> personIter = new CsvMapper().readerWithTypedSchemaFor(Map.class).readValues(file);
-        List<Map> list = personIter.readAll();
+        List<Map<String, String>> list = new ArrayList<>();
+        String filePath = file.getPath();
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            String[] headers = br.readLine().split(CSV_DEL);
+            while ((line = br.readLine()) != null) {
+                String[] values = line.split(CSV_DEL);
+                Map<String, String> record = new HashMap<>();
+                for (int i = 0; i < headers.length; i++) {
+                    record.put(headers[i], values[i]);
+                }
+                list.add(record);
+            }
+        }
         return list;
     }
 
@@ -81,11 +95,12 @@ public class ReadFile {
     private List getDataJSON(File file) throws IOException {
 
         Path path = Path.of(file.getPath());
-        String jsonList = Files.readString(path);
+        String jsonString = Files.readString(path);
 
-        ObjectMapper mapper = new ObjectMapper();
+        ObjectMapper objectMapper = new ObjectMapper();
+        TypeReference<List<Map<String,Object>>> typeRef = new TypeReference<>() {};
+        List<Map<String, Object>> list = objectMapper.readValue(jsonString, typeRef);
 
-        return Arrays.asList(mapper.readValue(jsonList, Map[].class));
+        return list;
     }
-
 }
