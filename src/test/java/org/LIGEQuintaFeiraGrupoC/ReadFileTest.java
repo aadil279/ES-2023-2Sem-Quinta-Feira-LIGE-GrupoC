@@ -25,10 +25,6 @@ class ReadFileTest {
 
     /*@Test
     void testIsValidFile() {
-    }
-
-    @Test
-    void testGetData() {
     }*/
 
     @Test

@@ -23,7 +23,7 @@ import java.util.Map;
 public class ReadFile {
     private static final String JSON_SUFX = ".json";
     private static final String CSV_SUFX = ".csv";
-    private static final char CSV_DEL = ',';
+    private static final char CSV_DEL = ';';
     
     /**
      * Gets a file from disk or web
