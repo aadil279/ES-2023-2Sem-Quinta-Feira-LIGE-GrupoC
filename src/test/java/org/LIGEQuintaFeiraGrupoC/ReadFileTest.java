@@ -1,10 +1,11 @@
 package org.LIGEQuintaFeiraGrupoC;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -24,10 +25,6 @@ class ReadFileTest {
 
     /*@Test
     void testIsValidFile() {
-    }
-
-    @Test
-    void testGetData() {
     }*/
 
     @Test
@@ -51,5 +48,37 @@ class ReadFileTest {
         assertTrue(csvFile.exists());
         csvFile.delete();
         jsonFile.delete();
+    }
+
+    @Test
+    void testConvertFromCSVToList() {
+        File csvFile = ReadFile.getFile(System.getProperty("user.dir")+File.separator+"testFiles"+File.separator+"horario_exemplo.csv");
+        List csvList = new ArrayList();
+
+        try {
+            csvList.add(ReadFile.getData(csvFile));
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        csvList.forEach(b -> System.out.println(b.toString()));
+        assertTrue(!csvList.isEmpty());
+    }
+
+    @Test
+    void testConvertFromJSONToList() {
+        File jsonFile = ReadFile.getFile(System.getProperty("user.dir")+File.separator+"testFiles"+File.separator+"horario_exemplo.json");
+        List jsonList = new ArrayList();
+
+        try {
+            jsonList.add(ReadFile.getData(jsonFile));
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        jsonList.forEach(b -> System.out.println(b.toString()));
+        assertTrue(!jsonList.isEmpty());
     }
 }
