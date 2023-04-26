@@ -60,7 +60,7 @@ public class ReadFile {
     }
 
     public boolean isValidFile(File file) {
-        return !file.getPath().isEmpty();
+        return file.exists() && !file.getPath().isEmpty();
     }
 
     public List getData(File file) throws IOException {
@@ -81,20 +81,6 @@ public class ReadFile {
      * @throws IOException in case the csv is not properly formatted.
      */
     private List getDataCSV(File file) throws IOException {
-        /*List<Map<String, String>> list = new ArrayList<>();
-        String filePath = file.getPath();
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            String[] headers = br.readLine().split(CSV_DEL);
-            while ((line = br.readLine()) != null) {
-                String[] values = line.split(CSV_DEL);
-                Map<String, String> record = new HashMap<>();
-                for (int i = 0; i < headers.length; i++) {
-                    record.put(headers[i], values[i]);
-                }
-                list.add(record);
-            }
-        }*/
         CsvSchema schema = CsvSchema.builder().setColumnSeparator(CSV_DEL).setUseHeader(true).build();
         CsvMapper mapper = new CsvMapper();
 
