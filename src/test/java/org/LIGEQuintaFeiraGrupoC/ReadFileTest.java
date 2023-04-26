@@ -56,12 +56,11 @@ class ReadFileTest {
 
     @Test
     void testConvertFromCSVToList() {
-        ReadFile read = new ReadFile();
         File csvFile = ReadFile.getFile(System.getProperty("user.dir")+File.separator+"testFiles"+File.separator+"horario_exemplo.csv");
         List csvList = new ArrayList();
 
         try {
-            csvList.add(read.getData(csvFile));
+            csvList.add(ReadFile.getData(csvFile));
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -73,12 +72,11 @@ class ReadFileTest {
 
     @Test
     void testConvertFromJSONToList() {
-        ReadFile read = new ReadFile();
         File jsonFile = ReadFile.getFile(System.getProperty("user.dir")+File.separator+"testFiles"+File.separator+"horario_exemplo.json");
         List jsonList = new ArrayList();
 
         try {
-            jsonList.add(read.getData(jsonFile));
+            jsonList.add(ReadFile.getData(jsonFile));
 
         } catch (IOException e) {
             throw new RuntimeException(e);

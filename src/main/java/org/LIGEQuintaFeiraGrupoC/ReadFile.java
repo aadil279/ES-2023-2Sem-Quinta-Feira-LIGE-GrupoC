@@ -63,7 +63,7 @@ public class ReadFile {
         return file.exists() && !file.getPath().isEmpty();
     }
 
-    public List getData(File file) throws IOException {
+    public static List getData(File file) throws IOException {
         List l = new ArrayList();
 
         if(file.getName().endsWith(CSV_SUFX))
@@ -80,7 +80,7 @@ public class ReadFile {
      * @return returns a type List<Map> where every Map is a row and contains the values of every column
      * @throws IOException in case the csv is not properly formatted.
      */
-    private List getDataCSV(File file) throws IOException {
+    private static List getDataCSV(File file) throws IOException {
         CsvSchema schema = CsvSchema.builder().setColumnSeparator(CSV_DEL).setUseHeader(true).build();
         CsvMapper mapper = new CsvMapper();
 
