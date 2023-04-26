@@ -60,10 +60,7 @@ public class ReadFile {
     }
 
     public boolean isValidFile(File file) {
-        boolean result = false;
-        if(!file.getPath().isEmpty())
-            result = true;
-        return result;
+        return !file.getPath().isEmpty();
     }
 
     public List getData(File file) throws IOException {
