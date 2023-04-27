@@ -1,5 +1,7 @@
 package org.LIGEQuintaFeiraGrupoC;
 
+import javafx.application.Application;
+
 /**
  * Hello world!
  *
@@ -7,7 +9,7 @@ package org.LIGEQuintaFeiraGrupoC;
 public class Main
 {
     public static void main( String[] args ) {
-        new Windows();
+        Application.launch(Calendar.class,"test");
     }
 
 
