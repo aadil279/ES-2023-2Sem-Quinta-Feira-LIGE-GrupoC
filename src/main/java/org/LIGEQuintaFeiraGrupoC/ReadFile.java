@@ -39,12 +39,16 @@ public class ReadFile {
         return null;
     }
 
+    /**
+     * Reads an online file from a URI
+     * @param file a String formatted as a URI
+     * @return a type File without name which content is a String if the URI is valid, 'null' otherwise
+     */
     private File readOnlineFile(String file) {
-        if(file.contains(URI_HEAD)) {
+        if(file.substring(0, 10).contains(URI_HEAD)) {
             int n = URI_HEAD.length();
             file = HTTP_HEAD + file.substring(n);
         }
-
 
         OkHttpClient client = new OkHttpClient();
         Request request = new Request.Builder().url(file).build();
@@ -108,6 +112,12 @@ public class ReadFile {
         return list;
     }
 
+    /**
+     * Transforms the content of a file into a Map
+     * @param file should be formatted as a Calendar in .ics
+     * @return returns a type List<Map> where every Map contains an event in the Calendar
+     * @throws IOException
+     */
     private List getDataICS(File file) throws IOException {
         VCalendar calendar = VCalendar.parse(file.toString());
         List<VEvent> events = calendar.getVEvents();

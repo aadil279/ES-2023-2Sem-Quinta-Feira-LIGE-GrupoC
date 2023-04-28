@@ -44,17 +44,16 @@ public class ReadFileTest {
         ReadFile read = new ReadFile();
         File file = read.getFile(horarioISCTE);
 
-        assert(file != null);
-        assert(!file.toString().isEmpty());
-
         List list = read.getData(file);
 
         assert(list!=null);
-        System.out.println(list.isEmpty());
+        assert(!list.isEmpty());
 
         System.out.println("Reading file");
+        int i=0;
         for(Object o : list) {
-            System.out.println(o.toString());
+            System.out.println("element "+i+" : "+o.toString());
+            i++;
         }
         System.out.println("---------READ----------");
     }
