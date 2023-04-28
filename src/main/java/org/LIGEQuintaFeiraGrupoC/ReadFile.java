@@ -1,20 +1,17 @@
 package org.LIGEQuintaFeiraGrupoC;
 
 import java.io.File;
-import java.io.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.CollectionType;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 
 import jfxtras.icalendarfx.VCalendar;
@@ -23,8 +20,6 @@ import jfxtras.icalendarfx.components.VEvent;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-
-import java.util.Map;
 
 public class ReadFile {
     public static final String URI_HEAD = "webcal";
