@@ -17,13 +17,18 @@ import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvParser;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.fasterxml.jackson.core.type.TypeReference;
+import jfxtras.icalendarfx.VCalendar;
+import jfxtras.icalendarfx.components.VEvent;
 
 import java.util.Map;
 
 public class ReadFile {
     private static final String JSON_SUFX = ".json";
     private static final String CSV_SUFX = ".csv";
+    private static final String ICAL_SUFX = ".ics";
     private static final char CSV_DEL = ';';
+    public static final String URI_HEAD = "webcal://";
+    public static final String HTTPS_HEAD = "https://";
     private static final String ourHeaders[] = {"Curso", "UC", "Turno", "Turma", "Inscritos", "DiaSemana", "HoraInic", "HoraFim", "Data", "Sala", "Lotacao"};
     
     /**
@@ -32,7 +37,7 @@ public class ReadFile {
      * @return File corresponding to the path or URL
      */
     public static File getFile(String file) {
-        if(file.startsWith("http://") || file.startsWith("https://"))
+        if(file.startsWith("http://") || file.startsWith(HTTPS_HEAD) || file.startsWith(URI_HEAD))
             return readOnlineFile(file);
         return readLocalFile(file);
     }
@@ -45,10 +50,21 @@ public class ReadFile {
     }
 
     private static File readOnlineFile(String file) {
-        String[] fields = file.split("/");
-        String filename = fields[fields.length-1];
+        String url = file;
+        String[] fields;
+        String filename = "test";
+        if(url.startsWith(URI_HEAD)) {
+            url = url.replace(URI_HEAD,HTTPS_HEAD);
+            fields = url.split("[&=]");
+            for (String s : fields)
+                if(s.contains("@"))     filename = s + ".ics";
+        }
+        else{
+            fields = url.split("/");
+            filename = fields[fields.length-1];
+        }
         try {
-            URL website = new URL(file);
+            URL website = new URL(url);
             ReadableByteChannel rbc = Channels.newChannel(website.openStream());
             FileOutputStream fos = new FileOutputStream(filename);
             fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
@@ -85,14 +101,14 @@ public class ReadFile {
     }
 
     public static List<Map<String,?>> getData(File file) throws IOException {
-        List<Map<String,?>> l = new ArrayList();
-
         if(file.getName().endsWith(CSV_SUFX))
-            l.addAll(getDataCSV(file));
-        else if(file.getName().endsWith(JSON_SUFX))
-            l.addAll(getDataJSON(file));
+            return getDataCSV(file);
+        if(file.getName().endsWith(JSON_SUFX))
+            return getDataJSON(file);
+        if(file.getName().endsWith(ICAL_SUFX))
+            return getDataICS(file);
 
-        return l;
+        return null;
     }
 
     /**
@@ -187,5 +203,21 @@ public class ReadFile {
             throw new RuntimeException(e);
         }
     }
+    /**
+     * Transforms the content of a file into a Map
+     * @param file should be formatted as a Calendar in .ics
+     * @return returns a type List<Map> where every Map contains an event in the Calendar
+     * @throws IOException
+     */
+    private static List getDataICS(File file) {
+        VCalendar calendar = null;
+        try {
+            calendar = VCalendar.parseICalendarFile(Path.of(file.getAbsolutePath()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        List<VEvent> events = calendar.getVEvents();
 
+        return events;
+    }
 }

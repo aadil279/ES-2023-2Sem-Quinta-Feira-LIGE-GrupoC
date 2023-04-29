@@ -22,6 +22,10 @@ class ReadFileTest {
 
         assertNull(ReadFile.getFile("InvalidFile"));
         assertNull(ReadFile.getFile("https://randomlink.fake"));
+
+        file = ReadFile.getFile("webcal://fenix.iscte-iul.pt/publico/publicPersonICalendar.do?method=iCalendar&username=larcs@iscte.pt&password=z7wVbBXBgvFsLak6Fniz4axxxOgdJAQ9lYpC50hHZNJW4peqyW7dn7OkMOzR8cdskCctRO4p2m3UZXBcI3iuHSLqLUAHOvVXJEeUY9ay7dxNXx3O6RRdKh0VsLKmrfoE");
+        assertTrue(file.exists());
+
         file.delete();
     }
 
@@ -82,6 +86,29 @@ class ReadFileTest {
 
         jsonList.forEach(b -> System.out.println(b.toString()));
         assertTrue(!jsonList.isEmpty());
+    }
+
+    @Test
+    void testDataOnlineFileISCTE() {
+        File file = ReadFile.getFile("testFiles/horario_exemplo.ics");
+
+        List list = null;
+        try {
+            list = ReadFile.getData(file);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        assert(list!=null);
+        assert(!list.isEmpty());
+
+        System.out.println("Reading file");
+        int i=0;
+        for(Object o : list) {
+            System.out.println("element "+i+" : "+o.toString());
+            i++;
+        }
+        System.out.println("---------READ----------");
     }
 
     @Test
