@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -80,5 +82,24 @@ class ReadFileTest {
 
         jsonList.forEach(b -> System.out.println(b.toString()));
         assertTrue(!jsonList.isEmpty());
+    }
+
+    @Test
+    void testGetHeaders() {
+        File jsonFile = ReadFile.getFile(System.getProperty("user.dir")+File.separator+"testFiles"+File.separator+"horario_exemplo.json");
+        List<Map<String,?>> jsonList = new ArrayList();
+
+        try {
+            jsonList.addAll(ReadFile.getData(jsonFile));
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        assertTrue(!jsonList.isEmpty());
+        Map<String,String> headers = ReadFile.getHeaders(jsonList.get(0).keySet());
+
+        headers.forEach((b,v) -> System.out.println(b + " = "+ v));
+        assertTrue(!headers.isEmpty());
     }
 }
