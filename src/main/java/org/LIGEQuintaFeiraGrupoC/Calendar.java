@@ -10,6 +10,7 @@ import jfxtras.scene.control.agenda.AgendaSkinSwitcher;
 import jfxtras.scene.layout.VBox;
 
 import java.io.File;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
@@ -23,10 +24,11 @@ public class Calendar extends Application {
 
     private List<Map<?,?>> events = new ArrayList<>();
 
-    public Calendar(List<Map<?,?>> events) {
-            this.events.addAll(events);
+    @Override
+    public void init() throws IOException {
+        events = ReadFile.getData(ReadFile.getFile(getParameters().getRaw().get(0)));
+        System.out.println(events);
     }
-
     @Override
     public void start(Stage stage) throws Exception {
         Agenda agenda;
@@ -39,8 +41,8 @@ public class Calendar extends Application {
                         .withSummary("Engenharia de Software")
         );
 
-        AgendaSkinSwitcher ss = new AgendaSkinSwitcher(createAgendaFromList(events));
-        //AgendaSkinSwitcher ss = new AgendaSkinSwitcher(agenda);
+        //AgendaSkinSwitcher ss = new AgendaSkinSwitcher(createAgendaFromList(events));
+        AgendaSkinSwitcher ss = new AgendaSkinSwitcher(agenda);
         VBox root = new VBox(agenda, ss);
         stage.setScene(new Scene(root));
         stage.show();
