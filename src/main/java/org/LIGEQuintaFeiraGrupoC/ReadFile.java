@@ -24,6 +24,7 @@ public class ReadFile {
     private static final String JSON_SUFX = ".json";
     private static final String CSV_SUFX = ".csv";
     private static final char CSV_DEL = ';';
+    private static final String ourHeaders[] = {"Curso", "UC", "Turno", "Turma", "Inscritos", "DiaSemana", "HoraInic", "HoraFim", "Data", "Sala", "Lotacao"};
     
     /**
      * Gets a file from disk or web
@@ -63,8 +64,28 @@ public class ReadFile {
         return file.exists() && !file.getPath().isEmpty();
     }
 
-    public static List getData(File file) throws IOException {
-        List l = new ArrayList();
+    /**
+     * given a key set devolves a map with our header to use a common language due to differences between files
+     * @param originHeaders a key set from the original file
+     * @return a HashMap where keys are our common keys and value are the original file's keys
+     */
+    public static Map<String,String> getHeaders(Set<String> originHeaders) {
+        Map<String,String> nameMap = new HashMap<>();
+        int max = Math.min(originHeaders.size(), ourHeaders.length);
+
+        int i = 0;
+        for(String key : originHeaders) {
+            nameMap.put(ourHeaders[i], key);
+            i++;
+
+            if(i == max) break;
+        }
+
+        return nameMap;
+    }
+
+    public static List<Map<String,?>> getData(File file) throws IOException {
+        List<Map<String,?>> l = new ArrayList();
 
         if(file.getName().endsWith(CSV_SUFX))
             l.addAll(getDataCSV(file));
@@ -80,12 +101,12 @@ public class ReadFile {
      * @return returns a type List<Map> where every Map is a row and contains the values of every column
      * @throws IOException in case the csv is not properly formatted.
      */
-    private static List getDataCSV(File file) throws IOException {
+    private static List<Map<String,?>> getDataCSV(File file) throws IOException {
         CsvSchema schema = CsvSchema.builder().setColumnSeparator(CSV_DEL).setUseHeader(true).build();
         CsvMapper mapper = new CsvMapper();
 
-        List<Map<?,?>> list;
-        MappingIterator<Map<?,?>> mappingIterator = mapper.reader().forType(Map.class).with(schema).readValues(file);
+        List<Map<String,?>> list;
+        MappingIterator<Map<String,?>> mappingIterator = mapper.reader().forType(Map.class).with(schema).readValues(file);
         list = mappingIterator.readAll();
 
         return list;
@@ -97,14 +118,14 @@ public class ReadFile {
      * @return returns a type List<Map> where every Map contains the attributes of the json element
      * @throws IOException
      */
-    private static List getDataJSON(File file) throws IOException {
+    private static List<Map<String,?>> getDataJSON(File file) throws IOException {
 
         Path path = Path.of(file.getPath());
         String jsonString = Files.readString(path);
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TypeReference<List<Map<String,Object>>> typeRef = new TypeReference<>() {};
-        List<Map<String, Object>> list = objectMapper.readValue(jsonString, typeRef);
+        TypeReference<List<Map<String,?>>> typeRef = new TypeReference<>() {};
+        List<Map<String,?>> list = objectMapper.readValue(jsonString, typeRef);
 
         return list;
     }
@@ -115,20 +136,20 @@ public class ReadFile {
      * @return JSON file created from CSV file. Null if f isn't CSV or has errors.
      */
     public static File convertToJSON(File f) {
-        if (!f.getName().endsWith(".csv"))
+        if (!f.getName().endsWith(CSV_SUFX))
             return null;
         //CSV structure
-        CsvSchema schema = CsvSchema.builder().setColumnSeparator(';').setUseHeader(true).build();
+        CsvSchema schema = CsvSchema.builder().setColumnSeparator(CSV_DEL).setUseHeader(true).build();
         CsvMapper mapper = new CsvMapper();
         mapper.enable(CsvParser.Feature.IGNORE_TRAILING_UNMAPPABLE);
         try {
             // Convert CSV to List of Maps
-            List<Map<?,?>> list;
-            MappingIterator<Map<?,?>> mappingIterator = mapper.reader().forType(Map.class).with(schema).readValues(f);
+            List<Map<String,?>> list;
+            MappingIterator<Map<String,?>> mappingIterator = mapper.reader().forType(Map.class).with(schema).readValues(f);
             list = mappingIterator.readAll();
 
             // Write list to new jsonFile
-            File jsonFile = new File(f.getName().replace(".csv",".json"));
+            File jsonFile = new File(f.getName().replace(CSV_SUFX, JSON_SUFX));
             jsonFile.createNewFile();
             new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT,true).writeValue(jsonFile,list);
             return jsonFile;
@@ -144,18 +165,19 @@ public class ReadFile {
      * @return CSV file created from JSON.
      */
     public static File convertToCSV(File f) {
-        if(!f.getName().endsWith(".json"))  return null;
+        if(!f.getName().endsWith(JSON_SUFX))
+            return null;
         try {
             // Getting values from file and creating csv structure
             JsonNode jsonTree = new ObjectMapper().readTree(f);
-            CsvSchema.Builder csvSchemaBuilder = CsvSchema.builder().setColumnSeparator(';').setUseHeader(true);
+            CsvSchema.Builder csvSchemaBuilder = CsvSchema.builder().setColumnSeparator(CSV_DEL).setUseHeader(true);
             // Get header for csv
             JsonNode firstObject = jsonTree.elements().next();
             firstObject.fieldNames().forEachRemaining(fieldName -> {csvSchemaBuilder.addColumn(fieldName);});
 
             CsvSchema csvSchema = csvSchemaBuilder.build();
 
-            File newFile = new File(f.getName().replace(".json",".csv"));
+            File newFile = new File(f.getName().replace(JSON_SUFX, CSV_SUFX));
             newFile.createNewFile();
 
             //Convert jsonTree to csv file
