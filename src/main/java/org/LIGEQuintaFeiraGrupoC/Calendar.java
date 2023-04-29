@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -31,18 +32,9 @@ public class Calendar extends Application {
     }
     @Override
     public void start(Stage stage) throws Exception {
-        Agenda agenda;
-        agenda = new Agenda();
-        agenda.appointments().add(
-                new Agenda.AppointmentImplLocal()
-                        .withStartLocalDateTime(LocalDate.now().atTime(13,00))
-                        .withEndLocalDateTime(LocalDate.now().atTime(16,00))
-                        .withDescription("ES")
-                        .withSummary("Engenharia de Software")
-        );
-
-        //AgendaSkinSwitcher ss = new AgendaSkinSwitcher(createAgendaFromList(events));
+        Agenda agenda = createAgendaFromList(events);
         AgendaSkinSwitcher ss = new AgendaSkinSwitcher(agenda);
+
         VBox root = new VBox(agenda, ss);
         stage.setScene(new Scene(root));
         stage.show();
@@ -52,20 +44,26 @@ public class Calendar extends Application {
         Agenda agenda = new Agenda();
 
         for(Map<?,?> m : list) {
-            CharSequence inicDateChar = (CharSequence)(m.get("Data da aula").toString() + " "+ m.get("Hora início da aula").toString());
-            LocalDateTime inicDate = LocalDateTime.parse(inicDateChar, DateTimeFormatter.ofPattern("dd/mm/yyyy hh:mm:ss"));
+            CharSequence dateChar = (CharSequence)(m.get("Data da aula").toString());
+            LocalDate date = LocalDate.parse(dateChar, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+
+            CharSequence inicTimeChar = (CharSequence)(m.get("Hora início da aula").toString());
+            LocalTime inicTime = LocalTime.parse(inicTimeChar, DateTimeFormatter.ofPattern("HH:mm:ss"));
 
             CharSequence endTimeChar = (CharSequence)(m.get("Hora fim da aula").toString());
-            LocalDateTime endTime = LocalDateTime.parse(endTimeChar, DateTimeFormatter.ofPattern("hh:mm:ss"));
-            LocalDateTime endDate = inicDate.plusHours(endTime.getHour()).plusMinutes(endTime.getMinute()).plusSeconds(endTime.getSecond());
+            LocalTime endTime = LocalTime.parse(endTimeChar, DateTimeFormatter.ofPattern("HH:mm:ss"));
+
+            LocalDateTime startDateTime = inicTime.atDate(date);
+            LocalDateTime endDateTime = endTime.atDate(date);
+            System.out.println(startDateTime + " " + endDateTime);
 
             String description = m.toString();
             String summary = m.get("Unidade Curricular").toString();
 
             agenda.appointments().add(
                     new Agenda.AppointmentImplLocal()
-                            .withStartLocalDateTime(inicDate)
-                            .withEndLocalDateTime(endDate)
+                            .withStartLocalDateTime(startDateTime)
+                            .withEndLocalDateTime(endDateTime)
                             .withDescription(description)
                             .withSummary(summary)
             );

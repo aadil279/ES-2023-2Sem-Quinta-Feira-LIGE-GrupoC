@@ -165,4 +165,14 @@ public class ReadFile {
             throw new RuntimeException(e);
         }
     }
+    public static void main(String[] args) {
+        try {
+            List l = getData(getFile("testFiles/horario_exemplo.csv"));
+            System.out.println(l);
+            Map<?,?> m = (Map<?, ?>) l.get(0);
+            System.out.println(m.get("Curso"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
