@@ -60,7 +60,9 @@ public class ReadFile {
     }
 
     public boolean isValidFile(File file) {
+    	
         return file.exists() && !file.getPath().isEmpty();
+        
     }
 
     public static List getData(File file) throws IOException {
@@ -71,6 +73,7 @@ public class ReadFile {
         else if(file.getName().endsWith(JSON_SUFX))
             l.addAll(getDataJSON(file));
 
+      
         return l;
     }
 
