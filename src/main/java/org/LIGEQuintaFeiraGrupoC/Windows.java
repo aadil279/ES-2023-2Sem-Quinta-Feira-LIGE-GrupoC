@@ -1,5 +1,7 @@
 package org.LIGEQuintaFeiraGrupoC;
 
+import javafx.application.Application;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -7,48 +9,53 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 
-import java.util.List;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 public class Windows extends JFrame {
 
-    private JTextField fileNameField;
-    private JRadioButton jsonRadioButton;
-    private JRadioButton csvRadioButton;
-    private JTextField finalPathField;
+    private static final String SELECT_FILE = "Select file";
+    private static final String SELECT_DIR = "Select a directory";
 
-    private String file;
-    //private String endPath;
-    //private String type;
+    boolean fileSelected = false;
+    boolean dirSelected = false;
+    File resultantFile;
+    File resultantDir;
+    String fileURL;
 
     private void process() {
-        ReadFile reader = new ReadFile();
-        File processedFile = reader.getFile(file);
+        waitingWindows();
 
-        try {
-            List fileElements = reader.getData(processedFile);
-
-            if(!fileElements.isEmpty()) {
-                successWindow(fileElements);
-            }
-        } catch (IOException e) {
-            System.err.println("Not a valid type");
+        if(!fileSelected) {
+            resultantFile = ReadFile.getFile(fileURL);
         }
-    }
 
-    private void successWindow(List fileElements) {
+        setVisible(false);
+        Application.launch(Calendar.class, new String[]{resultantFile.getName()});
+        //successWindow();
+    }
+/*
+    private void successWindow() {
         setVisible(false);
         removeAll();
 
-        setTitle("Success");
+        setTitle("Success inserting file");
         JPanel panel = new JPanel();
+        JLabel label = new JLabel(resultantFile.getName());
+        JButton continueToCalendar = new JButton("Continue");
+        continueToCalendar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setVisible(false);
+                Application.launch(Calendar.class,new String[]{resultantFile.getName()});
+            }
+        });
+        panel.add(label);
+        panel.add(continueToCalendar, BorderLayout.CENTER);
+        add(panel);
 
-        for (Object fileElement : fileElements) {
-            JTextField text = new JTextField(fileElement.toString());
-            panel.add(text);
-        }
-
-        setVisible(true);
-    }
+        //setVisible(true);
+    }*/
 
     public Windows() {
         // Set up the JFrame
@@ -62,57 +69,48 @@ public class Windows extends JFrame {
         panel.setLayout(new GridLayout(4, 2));
 
         // Create the components
-        JLabel fileNameLabel = new JLabel("File Name:");
-        fileNameField = new JTextField();
-        JLabel fileTypeLabel = new JLabel("File Type:");
-        jsonRadioButton = new JRadioButton("JSON");
-        csvRadioButton = new JRadioButton("CSV");
-        JLabel finalPathLabel = new JLabel("Final Path:");
-        finalPathField = new JTextField();
+        JLabel fileURLLabel = new JLabel("or insert file URL:");
+        JTextField fileURLInput = new JTextField("url");
         JButton okButton = new JButton("OK");
+        JButton selectFile = new JButton(SELECT_FILE);
+        JButton selectDir = new JButton(SELECT_DIR);
+
+        selectFile.addActionListener(e -> {
+            File tempFile = getFileFromUser(SELECT_FILE);
+            if(tempFile != null) {
+                resultantFile = tempFile;
+                fileSelected = true;
+            } else {
+                showError("Couldn't find the file", "Error selecting file");
+            }
+        });
+
+        selectDir.addActionListener(e -> {
+            File tempFile = getDirectoryFromUser(SELECT_FILE);
+            if(tempFile != null) {
+                resultantDir = tempFile;
+                dirSelected = true;
+            } else {
+                showError("Couldn't find the choosen directory", "Error selecting dir");
+            }
+        });
 
         // Add the components to the panel
-        panel.add(fileNameLabel);
-        panel.add(fileNameField);
-        panel.add(fileTypeLabel);
-        panel.add(jsonRadioButton);
+        panel.add(selectFile);
+        panel.add(fileURLLabel);
+        panel.add(fileURLInput);
         panel.add(new JLabel()); // Empty label for spacing
-        panel.add(csvRadioButton);
-        panel.add(finalPathLabel);
-        panel.add(finalPathField);
-
-        // Add radio buttons to a button group to ensure only one can be selected at a time
-        ButtonGroup fileTypeGroup = new ButtonGroup();
-        fileTypeGroup.add(jsonRadioButton);
-        fileTypeGroup.add(csvRadioButton);
+        panel.add(selectDir);
 
         // Set up the OK button
-        okButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Get the information from the fields
-                String fileName = fileNameField.getText();
-                String fileType = "";
-                if (jsonRadioButton.isSelected()) {
-                    fileType = "JSON";
-                } else if (csvRadioButton.isSelected()) {
-                    fileType = "CSV";
-                }
-                String finalPath = finalPathField.getText();
-
-                // Check if the final path is valid
-                if (isValidPath(finalPath)) {
-                    // Do something with the information (in this case, just print it to the console)
-                    file = fileName;
-                    //type = fileType;
-                    //endPath = finalPath;
-
-                    waitingWindows();
-
-                    process();
+        okButton.addActionListener(e -> {
+            if(fileSelected || !fileURLInput.getText().isEmpty()) {
+                if(!dirSelected) {
+                    showError("No dir selected", "Couldn't execute");
                 } else {
-                    // Display an error message if the final path is not valid
-                    JOptionPane.showMessageDialog(panel, "Invalid final path", "Error", JOptionPane.ERROR_MESSAGE);
+                    fileURL = fileURLInput.getText();
+                    process();
+                    disable();
                 }
             }
         });
@@ -133,7 +131,7 @@ public class Windows extends JFrame {
         add(panel, BorderLayout.CENTER);
         setVisible(true);
     }
-
+/*
     // Function to check if a path is valid
     private boolean isValidPath(String path) {
         boolean result = false;
@@ -146,5 +144,69 @@ public class Windows extends JFrame {
         }
 
         return result;
+    }*/
+    /**
+     * Displays a file chooser dialog box and returns the selected file.
+     * @param dialogTitle The title to display on the dialog box.
+     * @return The selected file.
+     */
+    public static File getFileFromUser(String dialogTitle) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle(dialogTitle);
+
+        // Show the dialog box and wait for the user to select a file
+        int result = fileChooser.showOpenDialog(null);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            return fileChooser.getSelectedFile();
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Displays a file chooser dialog box and returns the selected directory.
+     * @param dialogTitle The title to display on the dialog box.
+     * @return The selected directory.
+     */
+    public static File getDirectoryFromUser(String dialogTitle) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle(dialogTitle);
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+
+        // Show the dialog box and wait for the user to select a directory
+        int result = fileChooser.showOpenDialog(null);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            return fileChooser.getSelectedFile();
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Moves a file to a new directory.
+     * @param file The file to move.
+     * @param targetDirectory The target directory to move the file into.
+     * @return The new file object representing the moved file, or null if an error occurred.
+     */
+    public static File moveFile(File file, File targetDirectory) {
+        // Create a File object representing the target file in the new directory
+        File targetFile = new File(targetDirectory.getAbsolutePath() + File.separator + file.getName());
+
+        try {
+            // Move the file to the target directory
+            Files.move(file.toPath(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            return targetFile;
+        } catch (IOException e) {
+            System.err.println("An error occurred while moving the file: " + e.getMessage());
+            return null;
+        }
+    }
+    /**
+     * Shows an error message in a dialog box.
+     * @param message The error message to display.
+     * @param title The title of the dialog box.
+     */
+    public static void showError(String message, String title) {
+        JOptionPane.showMessageDialog(null, message, title, JOptionPane.ERROR_MESSAGE);
     }
 }
